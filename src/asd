@@ -1,0 +1,53 @@
+
+#include <Arduino.h>
+int Internet_flag = 0;
+const int leng = 5;
+int CurrentSensorState[leng];
+int InternetSensorState[leng];
+bool FirstTimeFlag = 1;
+// WIFI ADJUSTs
+#include <WiFiAdjust.h>
+int red = 15;   //8;
+int green = 13; // 6;
+int blue = 13;  //7;
+int power = 14; //5;
+
+void setup()
+{
+  pinMode(power, OUTPUT);
+  digitalWrite(power, LOW);
+  Serial.begin(115200);
+  Serial.println("ESP8266 INIT");
+  Serial.println(F("Inizializing FS..."));
+  // Initialize LittleFS
+  WiFiSetup();
+  Serial.println(WiFi.localIP());
+}
+
+void loop()
+{
+
+  if (Internet_flag)
+  {
+    Serial.println("Something happening in internet");
+    writeFile(LittleFS, MyFile, GeneralString);
+    for (int i = 0; i < leng; i++)
+    {
+      if (InternetSensorState[i] != CurrentSensorState[i])
+      {
+        CurrentSensorState[i] = InternetSensorState[i];
+      }
+    }
+    Internet_flag = 0;
+
+    analogWrite(red, CurrentSensorState[0]);
+    analogWrite(blue, CurrentSensorState[1]);
+    analogWrite(green, CurrentSensorState[2]);
+    
+    digitalWrite(power, CurrentSensorState[3]);
+    if (InternetSensorState[3] == 1)
+    {
+      InternetSensorState[3] = 0;
+    }  
+  }
+}
