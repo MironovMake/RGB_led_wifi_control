@@ -22,6 +22,8 @@ DNSServer dns;
 // Create an Event Source on /events
 AsyncEventSource events("/events");
 
+const char* ssid = "MironovAG";
+const char* password = "12345678";
 // REPLACE WITH YOUR NETWORK CREDENTIALS
 
 String GeneralString;
@@ -36,14 +38,6 @@ String sliderValue = "0";
 
 //=====================//
 // Set your Static IP address
-IPAddress local_IP(192, 168, 1, 184);
-// Set your Gateway IP address
-IPAddress gateway(192, 168, 1, 1);
-
-IPAddress subnet(255, 255, 0, 0);
-IPAddress primaryDNS(8, 8, 8, 8);   // optional
-IPAddress secondaryDNS(8, 8, 4, 4); // optional
-
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
@@ -99,7 +93,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         background: #003249;
         cursor: pointer;
       }
-
       input[type="checkbox"] {
         height: 40px;
         width: 40px;
@@ -182,7 +175,6 @@ const char index_html[] PROGMEM = R"rawliteral(
     </div>
     <script>
       let saf = ["red", "blue", "green"];
-
       function updateRed(element) {
         var sliderValue = document.getElementById("red").value;
         document.getElementById("red").innerHTML = sliderValue;
@@ -190,7 +182,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         xhr.open("GET", "/slider?value=" + sliderValue, true);
         xhr.send();
       }
-
       function updateGreen(element) {
         var sliderValue = document.getElementById("green").value;
         document.getElementById("green").innerHTML = sliderValue;
@@ -198,7 +189,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         xhr.open("GET", "/slider?value=" + sliderValue, true);
         xhr.send();
       }
-
       function updateBlue(element) {
         var sliderValue = document.getElementById("blue").value;
         document.getElementById("blue").innerHTML = sliderValue;
@@ -206,7 +196,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         xhr.open("GET", "/slider?value=" + sliderValue, true);
         xhr.send();
       }
-
       function updateBright(element) {
         var sliderValue = document.getElementById("bright").value;
         document.getElementById("bright").innerHTML = sliderValue;
@@ -214,7 +203,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         xhr.open("GET", "/slider?value=" + sliderValue, true);
         xhr.send();
       }
-
       function updatePower(element) {
         var sliderValue = document.getElementById("power").value;
         document.getElementById("power").innerHTML = sliderValue;
@@ -353,10 +341,6 @@ void WiFiSetup()
   Serial.println(F("Inizializing FS..."));
   (LittleFS.begin()) ? Serial.println(F("done.")) : Serial.println(F("fail."));
 
-  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS))
-  {
-    Serial.println("STA Failed to configure");
-  }
 
   GeneralString = readFile(LittleFS, MyFile);
   bool IKnow = 1;
@@ -380,9 +364,16 @@ void WiFiSetup()
   }
   Serial.println("GeneralString ");
   Serial.println(GeneralString);
-  AsyncWiFiManager wifiManager(&server, &dns);
-  wifiManager.autoConnect("AutoConnectAP");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi..");
+  }
+
+  // Print ESP Local IP Address
+  Serial.println(WiFi.localIP());
   Serial.println("connected...yeey :)");
+
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send_P(200, "text/html", index_html, processor2); });
   // Send a GET request to <ESP_IP>/get?ENC=<inputMessage>
